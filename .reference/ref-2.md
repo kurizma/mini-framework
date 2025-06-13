@@ -19,7 +19,7 @@
 
 1. src/vdom.js
 - Purpose:
-    - Procides functions to create virtual DOM nodes (plain JS objects representing elements).
+    - Provides functions to create virtual DOM nodes (plain JS objects representing elements).
     - Contains logic to diff (compare) old and new virtual DOM trees and patch (update) the real DOM efficiently.
 - Example:
     - h(type, props, children) – creates a virtual node.

@@ -1,9 +1,20 @@
 import { renderElement } from "../src/vdom.js";
 
+
+
+const headerVNode = {
+    tag: "header",
+    attrs: { class: "header" },
+    children: [
+        { tag: "h1", attrs: {}, children: ["todos"] },
+        { tag: "input", attrs: { class: "new-todo", placeholder: "What needs to be done?", autofocus: "" }, children: [] }
+    ]
+};
+
 // mainVNode.js (or inline in app.js)
 const mainVNode = {
     tag: "main",
-    attrs: { class: "main", style: "display: none;" }, // hidden when no todos
+    attrs: { class: "main", style: "display: block;" }, // hidden when no todos
     children: [
         {
         tag: "div",
@@ -21,18 +32,10 @@ const mainVNode = {
     ]
 };
 
-const headerVNode = {
-    tag: "header",
-    attrs: { class: "header" },
-    children: [
-        { tag: "h1", attrs: {}, children: ["todos"] },
-        { tag: "input", attrs: { class: "new-todo", placeholder: "What needs to be done?", autofocus: "" }, children: [] }
-    ]
-};
 
 const footerVNode = {
     tag: "footer",
-    attrs: { class: "footer", style: "display: none;" },
+    attrs: { class: "footer", style: "display: block;" },
     children: [
         {
         tag: "span",

@@ -21,6 +21,15 @@ const mainVNode = {
     ]
 };
 
+const headerVNode = {
+    tag: "header",
+    attrs: { class: "header" },
+    children: [
+        { tag: "h1", attrs: {}, children: ["todos"] },
+        { tag: "input", attrs: { class: "new-todo", placeholder: "What needs to be done?", autofocus: "" }, children: [] }
+    ]
+};
+
 const footerVNode = {
     tag: "footer",
     attrs: { class: "footer", style: "display: none;" },
@@ -60,6 +69,7 @@ const appVNode = {
     tag: "section",
     attrs: { class: "todoapp" },
     children: [
+        headerVNode,
         mainVNode,
         footerVNode
     ]

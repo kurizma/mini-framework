@@ -135,8 +135,8 @@ function renderApp(state) {
 
 ## Key Differences from Direct DOM
 
-- **UI is described as virtual DOM trees (JS objects), not created directly in the real DOM**[2][4].
-- **Rendering is handled by diffing and patching, not by clearing and rebuilding DOM nodes**[3].
-- **State and route changes trigger virtual DOM updates, which are efficiently synced to the real DOM**[1][2][3][4].
+- **UI is described as virtual DOM trees (JS objects), not created directly in the real DOM**.
+- **Rendering is handled by diffing and patching, not by clearing and rebuilding DOM nodes**.
+- **State and route changes trigger virtual DOM updates, which are efficiently synced to the real DOM**.
 
 ---

@@ -1,5 +1,5 @@
 export function renderElement(node) {
-    // handle text nodes (strings) directly
+    // handle text nodes (strings) 
     if (typeof node === "string") {
         return document.createTextNode(node);
     }
@@ -7,10 +7,12 @@ export function renderElement(node) {
     // handle element nodes (objects)
     const el = document.createElement(node.tag);
 
+    // set attributes
     for (const [key, value] of Object.entries(node.attrs || {})) {
         el.setAttribute(key, value);
     }
 
+    // render and append children
     if (node.children && Array.isArray(node.children)) {
         node.children.forEach((child) => {
             // Recursively render children
@@ -72,16 +74,74 @@ function diffProps(oldProps = {}, newProps = {}) {
 
 // Helper: Diff children
 function diffChildren(oldChildren = [], newChildren = []) {
-    const patches = [];
-    const max = Math.max(oldChildren.length, newChildren.length);
-    for (let i = 0; i < max; i++) {
-        patches[i] = diff(oldChildren[i], newChildren[i]);
+
+    // If children are undefined, treat as empty array
+    oldChildren = oldChildren || [];
+    newChildren = newChildren || [];
+
+    // Build key maps for old and new children
+    const oldKeyed = {};
+    const newKeyed = {};
+
+    oldChildren.forEach((child, i) => {
+        if (child && typeof child === "object" && child.key != null) {
+            oldKeyed[child.key] = { child, index: i };
+        }
+    });
+    newChildren.forEach((child, i) => {
+        if (child && typeof child === "object" && child.key != null) {
+            newKeyed[child.key] = { child, index: i };
+        }
+    });
+
+    // If no keys, fallback to index-based diffing
+    const hasKeys = Object.keys(oldKeyed).length > 0 || Object.keys(newKeyed).length > 0;
+    if (!hasKeys) {
+        const patches = [];
+        const max = Math.max(oldChildren.length, newChildren.length);
+        for (let i = 0; i < max; i++) {
+            patches[i] = diff(oldChildren[i], newChildren[i]);
+        }
+        return patches;
     }
+
+    // Key-based diffing
+    const patches = [];
+    const usedOldKeys = new Set();
+
+
+    // Go through new children, match by key
+    newChildren.forEach((newChild, i) => {
+        if (newChild && typeof newChild === "object" && newChild.key != null) {
+            const oldEntry = oldKeyed[newChild.key];
+            if (oldEntry) {
+                patches[i] = diff(oldEntry.child, newChild);
+                usedOldKeys.add(newChild.key);
+            } else {
+                // New node (not found in old)
+                patches[i] = diff(undefined, newChild);
+            }
+        } else {
+            // Fallback for non-keyed nodes
+            patches[i] = diff(oldChildren[i], newChild);
+        }
+    });
+
+    // Any old nodes not present in newChildren should be removed
+    oldChildren.forEach((oldChild, i) => {
+        if (oldChild && typeof oldChild === "object" && oldChild.key != null) {
+            if (!newKeyed[oldChild.key]) {
+                // Place a REMOVE patch at the old index
+                patches[i] = diff(oldChild, undefined);
+            }
+        }
+    });
+
     return patches;
 }
 
 
-/////////
+// ----------------------------- // 
 
 // Patch: Apply a patch object to the real DOM
 export function patch(parent, domNode, patchObj, index = 0) {
@@ -94,7 +154,7 @@ export function patch(parent, domNode, patchObj, index = 0) {
             return newDom;
         }
         case "REMOVE": {
-            parent.removeChild(domNode);
+            if (domNode) parent.removeChild(domNode);
             return null;
         }
         case "TEXT": {
@@ -115,10 +175,46 @@ export function patch(parent, domNode, patchObj, index = 0) {
                     domNode.setAttribute(key, value);
                 }
             });
-            // Patch children
-            const childNodes = domNode.childNodes;
+
+            // Patch children (key-based)
+            if (!domNode) return domNode;
+            const childNodes = Array.from(domNode.childNodes);
+            let domChildIndex = 0;
+
             for (let i = 0; i < patchObj.children.length; i++) {
-                patch(domNode, childNodes[i], patchObj.children[i], i);
+                const childPatch = patchObj.children[i];
+                const oldChildNode = childNodes[domChildIndex];
+
+                // If patch is a CREATE, insert new node
+                if (childPatch && childPatch.type === "CREATE") {
+                    const newChildDom = renderElement(childPatch.newVNode);
+                    domNode.insertBefore(newChildDom, oldChildNode || null);
+                    domChildIndex++;
+                }
+                // If patch is a REMOVE, remove the node
+                else if (childPatch && childPatch.type === "REMOVE") {
+                    if (oldChildNode && oldChildNode.parentNode === domNode) {
+                        domNode.removeChild(oldChildNode);
+                    }
+                    // Do not increment domChildIndex since node was removed
+                }
+                // Otherwise, patch the existing node
+                else {
+                    if (oldChildNode) {
+                        patch(domNode, oldChildNode, childPatch, i);
+                    }
+                    domChildIndex++;
+                }
+            }
+
+            // Remove any extra old nodes
+            while (domNode.childNodes.length > patchObj.children.length) {
+                const last = domNode.lastChild;
+                if (last && last.parentNode === domNode) {
+                    domNode.removeChild(last);
+                } else {
+                    break;
+                }
             }
             return domNode;
         }

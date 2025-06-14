@@ -1,5 +1,5 @@
 import { renderElement, diff, patch } from "../src/vdom.js";
-import { getState, subscribe, addTodo } from "../src/state.js";
+import { getState, subscribe } from "../src/state.js";
 import { setupEventListeners } from "../src/events.js";
 
 // Function to build the app virtual DOM tree based on state
@@ -10,23 +10,51 @@ import { setupEventListeners } from "../src/events.js";
  */
 function buildAppVNode(state) {
 
-    // Generate todo <li> items from state.todos
-    const todoListItems = state.todos.map(todo => {
+    // Filter todos based on state.filter
+    let todosToShow = state.todos;
+    if (state.filter === "active") {
+        todosToShow = todosToShow.filter(t => !t.completed);
+    } else if (state.filter === "completed") {
+        todosToShow = todosToShow.filter(t => t.completed);
+    }
+
+    // Generate keyed todo <li> items from state.todos
+    const todoListItems = todosToShow.map(todo => {
         const isEditing = state.editingId === todo.id;
         return {
             tag: "li",
+            key: todo.id,
             attrs: {
                 "data-id": String(todo.id),
-                class: (isEditing ? "editing" : "")
+                class: [
+                    isEditing ? "editing" : "",
+                    todo.completed ? "completed" : ""
+                ].filter(Boolean).join(" ")
             },
             children: [
                 {
                     tag: "div",
                     attrs: { class: "view" },
                     children: [
-                        { tag: "input", attrs: { class: "toggle", type: "checkbox" }, children: [] },
-                        { tag: "label", attrs: {}, children: [todo.text] },
-                        { tag: "button", attrs: { class: "destroy" }, children: [] }
+                        { 
+                            tag: "input", 
+                            attrs: { 
+                                class: "toggle", 
+                                type: "checkbox", 
+                                ...(todo.completed ? { checked: "" } : {}) 
+                            },
+                            children: [] 
+                        },
+                        { 
+                            tag: "label", 
+                            attrs: {}, 
+                            children: [todo.text] 
+                        },
+                        { 
+                            tag: "button", 
+                            attrs: { class: "destroy" },
+                            children: [] 
+                        }
                     ]
                 },
                 // Editing input (only visible in edit mode)
@@ -35,7 +63,7 @@ function buildAppVNode(state) {
                     attrs: { class: "edit", value: todo.text },
                     children: []
                 } : null
-            ].filter(Boolean)
+            ].filter(Boolean) // remove nulls
         };
     });
 
@@ -45,7 +73,15 @@ function buildAppVNode(state) {
         attrs: { class: "header" },
         children: [
             { tag: "h1", attrs: {}, children: ["todos"] },
-            { tag: "input", attrs: { class: "new-todo", placeholder: "What needs to be done?", autofocus: "" }, children: [] }
+            { 
+                tag: "input", 
+                attrs: { 
+                    class: "new-todo", 
+                    placeholder: "What needs to be done?", 
+                    autofocus: "" 
+                }, 
+                children: [] 
+            }
         ]
     };
 
@@ -57,8 +93,15 @@ function buildAppVNode(state) {
                 tag: "div",
                 attrs: { class: "toggle-all-container" },
                 children: [
-                    { tag: "input", attrs: { class: "toggle-all", type: "checkbox" }, children: [] },
-                    { tag: "label", attrs: { class: "toggle-all-label", for: "toggle-all" }, children: ["Mark all as complete"] }
+                    { 
+                        tag: "input", 
+                        attrs: { class: "toggle-all", type: "checkbox" }, 
+                        children: [] 
+                    },
+                    { 
+                        tag: "label", attrs: { class: "toggle-all-label", for: "toggle-all" }, 
+                        children: ["Mark all as complete"] 
+                    }
                 ]
             },
             {
@@ -70,6 +113,8 @@ function buildAppVNode(state) {
     };
 
     // footer w/ count and filters
+    const hasCompleted = state.todos.some(t => t.completed);
+
     const footerVNode = {
         tag: "footer",
         attrs: { class: "footer", style: "display: block;" },
@@ -78,7 +123,11 @@ function buildAppVNode(state) {
                 tag: "span",
                 attrs: { class: "todo-count" },
                 children: [
-                    { tag: "strong", attrs: {}, children: [String(state.todos.length)] },
+                    { 
+                        tag: "strong", 
+                        attrs: {}, 
+                        children: [String(state.todos.filter(t => !t.completed).length)] 
+                    },
                     " items left"
                 ]
             },
@@ -86,21 +135,55 @@ function buildAppVNode(state) {
                 tag: "ul",
                 attrs: { class: "filters" },
                 children: [
-                    { tag: "li", attrs: {}, children: [
-                        { tag: "a", attrs: { href: "#/", class: "selected" }, children: ["All"] }
+                    { 
+                        tag: "li", 
+                        attrs: {}, 
+                        children: [
+                            { 
+                                tag: "a", 
+                                attrs: { 
+                                    href: "#/", 
+                                    class: state.filter === "all" ? "selected" : "" 
+                                }, 
+                                children: ["All"] 
+                            }
                     ]},
-                    { tag: "li", attrs: {}, children: [
-                        { tag: "a", attrs: { href: "#/active", class: "" }, children: ["Active"] }
-                    ]},
-                    { tag: "li", attrs: {}, children: [
-                        { tag: "a", attrs: { href: "#/completed", class: "" }, children: ["Completed"] }
-                    ]}
+                    { 
+                        tag: "li", 
+                        attrs: {}, 
+                        children: [
+                            { 
+                                tag: "a", 
+                                attrs: { 
+                                    href: "#/active", 
+                                    class: state.filter === "active" ? "selected" : ""  
+                                }, 
+                                children: ["Active"] 
+                            }
+                        ]
+                    },
+                    { 
+                        tag: "li", 
+                        attrs: {}, 
+                        children: [
+                            { 
+                                tag: "a", 
+                                attrs: { 
+                                    href: "#/completed", class: state.filter === "completed" ? "selected" : "" 
+                                }, 
+                                children: ["Completed"] 
+                            }
+                        ]
+                    }
                 ]
             },
             {
                 tag: "button",
-                attrs: { class: "clear-completed", style: "display: none;" },
-                children: []
+                attrs: { 
+                    class: "clear-completed", 
+                    style: hasCompleted ? "" : "display: none;" 
+                },
+                children: ["Clear completed"]
             }
         ]
     };

@@ -1,5 +1,6 @@
 import { renderElement, diff, patch } from "../src/vdom.js";
 import { getState, subscribe, addTodo } from "../src/state.js";
+import { setupEventListeners } from "../src/events.js";
 
 // Function to build the app virtual DOM tree based on state
 /**
@@ -10,21 +11,33 @@ import { getState, subscribe, addTodo } from "../src/state.js";
 function buildAppVNode(state) {
 
     // Generate todo <li> items from state.todos
-    const todoListItems = state.todos.map(todo => ({
-        tag: "li",
-        attrs: { "data-id": String(todo.id), class: "" },
-        children: [
-            {
-                tag: "div",
-                attrs: { class: "view" },
-                children: [
-                    { tag: "input", attrs: { class: "toggle", type: "checkbox" }, children: [] },
-                    { tag: "label", attrs: {}, children: [todo.text] },
-                    { tag: "button", attrs: { class: "destroy" }, children: [] }
-                ]
-            }
-        ]
-    }));
+    const todoListItems = state.todos.map(todo => {
+        const isEditing = state.editingId === todo.id;
+        return {
+            tag: "li",
+            attrs: {
+                "data-id": String(todo.id),
+                class: (isEditing ? "editing" : "")
+            },
+            children: [
+                {
+                    tag: "div",
+                    attrs: { class: "view" },
+                    children: [
+                        { tag: "input", attrs: { class: "toggle", type: "checkbox" }, children: [] },
+                        { tag: "label", attrs: {}, children: [todo.text] },
+                        { tag: "button", attrs: { class: "destroy" }, children: [] }
+                    ]
+                },
+                // Editing input (only visible in edit mode)
+                isEditing ? {
+                    tag: "input",
+                    attrs: { class: "edit", value: todo.text },
+                    children: []
+                } : null
+            ].filter(Boolean)
+        };
+    });
 
 
     const headerVNode = {
@@ -118,15 +131,11 @@ function updateUI() {
     const patchObj = diff(oldVNode, newVNode);
     rootDomNode = patch(appRoot, rootDomNode, patchObj);
     oldVNode = newVNode;
+    setupEventListeners(appRoot);
 }
 
 // 3. Subscribe UI updates to state changes
 subscribe(updateUI);
 
-// 4. Demo: Add a todo when the button is clicked
-const button = document.createElement("button");
-button.textContent = "Add Todo";
-button.onclick = () => {
-    addTodo("Todo " + (getState().todos.length + 1));
-};
-appRoot.appendChild(button);
+// event listening for input
+setupEventListeners(appRoot);

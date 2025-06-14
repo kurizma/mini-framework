@@ -3,7 +3,8 @@
 // The app's state: an array of todos and the current filter
 let state = {
     todos: [], // Each todo: { id, text, completed }
-    filter: "all" // "all" | "active" | "completed"
+    filter: "all", // "all" | "active" | "completed"
+    editingId: null // id of todo item being edited or null
 };
 
 // Listeners to notify when state changes
@@ -67,5 +68,23 @@ export function removeTodo(id) {
 // Set the current filter
 export function setFilter(filter) {
     state = { ...state, filter };
+    notify();
+}
+
+export function setEditing(id) {
+    state = { ...state, editingId: id };
+    notify();
+}
+export function clearEditing() {
+    state = { ...state, editingId: null };
+    notify();
+}
+export function updateTodo(id, newText) {
+    state = {
+        ...state,
+        todos: state.todos.map(todo =>
+            todo.id === id ? { ...todo, text: newText } : todo
+        )
+    };
     notify();
 }

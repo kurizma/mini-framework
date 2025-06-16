@@ -8,6 +8,7 @@ import { setupEventListeners } from "../src/events.js";
  * @param {Object} state - The current application state (todos, filter, etc.)
  * @returns {Object} - The virtual DOM tree (root node)
  */
+
 function buildAppVNode(state) {
 
     // Filter todos based on state.filter
@@ -218,6 +219,7 @@ function updateUI() {
 }
 
 // 3. Subscribe UI updates to state changes
+// "Whenever the state changes, call updateUI to refresh the UI."
 subscribe(updateUI);
 
 // event listening for input

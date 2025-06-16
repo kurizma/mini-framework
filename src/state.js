@@ -75,10 +75,12 @@ export function setEditing(id) {
     state = { ...state, editingId: id };
     notify();
 }
+
 export function clearEditing() {
     state = { ...state, editingId: null };
     notify();
 }
+
 export function updateTodo(id, newText) {
     state = {
         ...state,

@@ -26,7 +26,13 @@ export function subscribe(listener) {
 
 // Notify all listeners (e.g., after a state change)
 function notify() {
-    listeners.forEach(listener => listener());
+    listeners.forEach(listener => {
+        try {
+            listener();
+        } catch (error) {
+            console.error('Error in state listener:', error);
+        }
+    });
 }
 
 // Add a new todo

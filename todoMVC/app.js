@@ -1,6 +1,14 @@
-import { renderElement, diff, patch } from "../src/vdom.js";
-import { getState, subscribe } from "../src/state.js";
-import { setupEventListeners } from "../src/events.js";
+import { 
+    renderElement, 
+    diff, 
+    patch, 
+    h,
+    getState, 
+    subscribe, 
+    setFilter,
+    setupEventListeners,
+    router 
+} from "../src/framework.js";
 
 // Function to build the app virtual DOM tree based on state
 /**
@@ -224,3 +232,11 @@ subscribe(updateUI);
 
 // event listening for input
 setupEventListeners(appRoot);
+
+// Initialize router with filter routes
+router.addRoute('/', () => setFilter('all'));
+router.addRoute('/active', () => setFilter('active'));
+router.addRoute('/completed', () => setFilter('completed'));
+
+// Start router
+router.handleRoute();

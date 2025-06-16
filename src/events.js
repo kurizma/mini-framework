@@ -58,13 +58,33 @@ export function setupEventListeners(appRoot) {
     // Add new todo on Enter key in the input box
     const input = appRoot.querySelector('.new-todo');
     if (input) {
-        input.onkeydown = null;
-        input.addEventListener('keydown', (e) => {
+        // Remove old listener
+        input.removeEventListener('keydown', input._todoKeyHandler);
+        
+        // Create named handler for proper cleanup
+        input._todoKeyHandler = (e) => {
             if (e.key === 'Enter' && input.value.trim()) {
                 addTodo(input.value.trim());
                 input.value = '';
             }
-        });
+        };
+        input.addEventListener('keydown', input._todoKeyHandler);
+    }
+
+    // ✅ Handle toggle-all functionality
+    const toggleAll = appRoot.querySelector('#toggle-all');
+    if (toggleAll) {
+        toggleAll.removeEventListener('change', toggleAll._toggleAllHandler);
+        toggleAll._toggleAllHandler = (e) => {
+            const { todos } = getState();
+            const areAllCompleted = todos.every(t => t.completed);
+            todos.forEach(todo => {
+                if (todo.completed === areAllCompleted) {
+                    toggleTodo(todo.id);
+                }
+            });
+        };
+        toggleAll.addEventListener('change', toggleAll._toggleAllHandler);
     }
 
     const todoList = appRoot.querySelector('.todo-list');
@@ -85,27 +105,28 @@ export function setupEventListeners(appRoot) {
         todoList.addEventListener('blur', handleTodoListBlur, true);
     }
 
-    // Filter buttons
+    // Filter buttons - ✅ Fixed to work with hash routing
     const filters = appRoot.querySelectorAll('.filters a');
     filters.forEach(link => {
-        link.onclick = null;
-        link.addEventListener('click', (e) => {
+        link.removeEventListener('click', link._filterHandler);
+        link._filterHandler = (e) => {
             e.preventDefault();
             const href = link.getAttribute('href');
-            if (href === "#/") setFilter("all");
-            else if (href === "#/active") setFilter("active");
-            else if (href === "#/completed") setFilter("completed");
-        });
+            // Update URL hash and let router handle it
+            window.location.hash = href;
+        };
+        link.addEventListener('click', link._filterHandler);
     });
 
     // Clear completed
     const clearBtn = appRoot.querySelector('.clear-completed');
     if (clearBtn) {
-        clearBtn.onclick = null;
-        clearBtn.addEventListener('click', () => {
+        clearBtn.removeEventListener('click', clearBtn._clearHandler);
+        clearBtn._clearHandler = () => {
             const { todos } = getState();
             todos.filter(t => t.completed).forEach(t => removeTodo(t.id));
-        });
+        };
+        clearBtn.addEventListener('click', clearBtn._clearHandler);
     }
 }
 

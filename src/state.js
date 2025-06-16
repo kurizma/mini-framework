@@ -40,12 +40,12 @@ export function addTodo(text) {
     state = {
         ...state,
         todos: [
-            ...state.todos,
             {
                 id: Date.now(),
                 text,
                 completed: false
-            }
+            },
+            ...state.todos // ✅ Put new todo FIRST, old ones after
         ]
     };
     notify();

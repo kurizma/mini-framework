@@ -18,7 +18,6 @@ import {
  */
 
 function buildAppVNode(state) {
-
     // Filter todos based on state.filter
     let todosToShow = state.todos;
     if (state.filter === "active") {
@@ -32,7 +31,7 @@ function buildAppVNode(state) {
         const isEditing = state.editingId === todo.id;
         return {
             tag: "li",
-            key: todo.id,
+            key: todo.id, // ✅ This is correct - keeps React-like key optimization
             attrs: {
                 "data-id": String(todo.id),
                 class: [
@@ -50,7 +49,7 @@ function buildAppVNode(state) {
                             attrs: { 
                                 class: "toggle", 
                                 type: "checkbox", 
-                                ...(todo.completed ? { checked: "" } : {}) 
+                                ...(todo.completed ? { checked: "checked" } : {}) // ✅ Fixed: proper checked value
                             },
                             children: [] 
                         },
@@ -69,13 +68,16 @@ function buildAppVNode(state) {
                 // Editing input (only visible in edit mode)
                 isEditing ? {
                     tag: "input",
-                    attrs: { class: "edit", value: todo.text },
+                    attrs: { 
+                        class: "edit", 
+                        value: todo.text,
+                        type: "text" // ✅ Added explicit type
+                    },
                     children: []
                 } : null
-            ].filter(Boolean) // remove nulls
+            ].filter(Boolean)
         };
     });
-
 
     const headerVNode = {
         tag: "header",
@@ -87,31 +89,35 @@ function buildAppVNode(state) {
                 attrs: { 
                     class: "new-todo", 
                     placeholder: "What needs to be done?", 
-                    autofocus: "" 
+                    autofocus: "",
+                    type: "text" // ✅ Added explicit type
                 }, 
                 children: [] 
             }
         ]
     };
 
-    const mainVNode = {
+    // ✅ Fixed: Only show main section when there are todos
+    const mainVNode = state.todos.length > 0 ? {
         tag: "main",
-        attrs: { class: "main", style: "display: block;" },
+        attrs: { class: "main" },
         children: [
             {
-                tag: "div",
-                attrs: { class: "toggle-all-container" },
-                children: [
-                    { 
-                        tag: "input", 
-                        attrs: { class: "toggle-all", type: "checkbox" }, 
-                        children: [] 
-                    },
-                    { 
-                        tag: "label", attrs: { class: "toggle-all-label", for: "toggle-all" }, 
-                        children: ["Mark all as complete"] 
-                    }
-                ]
+                tag: "input",
+                attrs: { 
+                    id: "toggle-all",
+                    class: "toggle-all", 
+                    type: "checkbox"
+                },
+                children: []
+            },
+            {
+                tag: "label",
+                attrs: { 
+                    for: "toggle-all",
+                    class: "toggle-all-label"
+                },
+                children: ["Mark all as complete"]
             },
             {
                 tag: "ul",
@@ -119,14 +125,12 @@ function buildAppVNode(state) {
                 children: todoListItems
             }
         ]
-    };
+    } : null;
 
-    // footer w/ count and filters
-    const hasCompleted = state.todos.some(t => t.completed);
-
-    const footerVNode = {
+    // ✅ Fixed: Only show footer when there are todos
+    const footerVNode = state.todos.length > 0 ? {
         tag: "footer",
-        attrs: { class: "footer", style: "display: block;" },
+        attrs: { class: "footer" },
         children: [
             {
                 tag: "span",
@@ -137,7 +141,7 @@ function buildAppVNode(state) {
                         attrs: {}, 
                         children: [String(state.todos.filter(t => !t.completed).length)] 
                     },
-                    " items left"
+                    ` item${state.todos.filter(t => !t.completed).length === 1 ? '' : 's'} left` // ✅ Fixed pluralization
                 ]
             },
             {
@@ -156,7 +160,8 @@ function buildAppVNode(state) {
                                 }, 
                                 children: ["All"] 
                             }
-                    ]},
+                        ]
+                    },
                     { 
                         tag: "li", 
                         attrs: {}, 
@@ -178,7 +183,8 @@ function buildAppVNode(state) {
                             { 
                                 tag: "a", 
                                 attrs: { 
-                                    href: "#/completed", class: state.filter === "completed" ? "selected" : "" 
+                                    href: "#/completed", 
+                                    class: state.filter === "completed" ? "selected" : "" 
                                 }, 
                                 children: ["Completed"] 
                             }
@@ -186,16 +192,16 @@ function buildAppVNode(state) {
                     }
                 ]
             },
-            {
+            // ✅ Fixed: Only show clear completed when there are completed items
+            state.todos.some(t => t.completed) ? {
                 tag: "button",
                 attrs: { 
-                    class: "clear-completed", 
-                    style: hasCompleted ? "" : "display: none;" 
+                    class: "clear-completed"
                 },
                 children: ["Clear completed"]
-            }
-        ]
-    };
+            } : null
+        ].filter(Boolean)
+    } : null;
 
     // root section
     return {
@@ -205,7 +211,7 @@ function buildAppVNode(state) {
             headerVNode,
             mainVNode,
             footerVNode
-        ]
+        ].filter(Boolean) // ✅ Filter out null sections
     };
 }
 

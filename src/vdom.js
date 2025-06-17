@@ -85,43 +85,41 @@ function diffProps(oldProps = {}, newProps = {}) {
     return patches;
 }
 
-// Helper: Diff children
+// Helper: Diff children - FIXED VERSION
 function diffChildren(oldChildren = [], newChildren = []) {
-    // Build key maps for old and new children
-    const oldKeyed = {};
-    oldChildren.forEach(child => {
-        if (!child || typeof child !== "object" || child.key == null) {
-            throw new Error("All children must have a unique 'key' property.");
-        }
-        oldKeyed[child.key] = child;
-    });
+  oldChildren = oldChildren || [];
+  newChildren = newChildren || [];
 
-    const patches = [];
-    const newKeys = newChildren.map(child => {
-        if (!child || typeof child !== "object" || child.key == null) {
-            throw new Error("All children must have a unique 'key' property.");
-        }
-        return child.key;
-    });
+  // Simple position-based diffing (more reliable for filtered lists)
+  const patches = [];
+  const maxLength = Math.max(oldChildren.length, newChildren.length);
 
-    // Build patch list for new order
-    newChildren.forEach((newChild, i) => {
-        const oldChild = oldKeyed[newChild.key];
-        patches.push({
-            key: newChild.key,
-            patch: diff(oldChild, newChild)
-        });
-    });
+  for (let i = 0; i < maxLength; i++) {
+    const oldChild = oldChildren[i];
+    const newChild = newChildren[i];
 
-    // Find keys to remove (present in old, not in new)
-    Object.keys(oldKeyed).forEach(key => {
-        if (!newKeys.includes(key)) {
-            patches.push({
-                key,
-                patch: diff(oldKeyed[key], undefined)
-            });
-        }
-    });
+    // For keyed elements, check if they're the same item
+    if (
+      oldChild &&
+      newChild &&
+      typeof oldChild === "object" &&
+      typeof newChild === "object" &&
+      oldChild.key &&
+      newChild.key
+    ) {
+      // Same key = update in place
+      if (oldChild.key === newChild.key) {
+        patches[i] = diff(oldChild, newChild);
+      }
+      // Different key = replace (this handles filter changes properly)
+      else {
+        patches[i] = { type: "REPLACE", newVNode: newChild };
+      }
+    } else {
+      // Standard diff for non-keyed or position changes
+      patches[i] = diff(oldChild, newChild);
+    }
+  }
 
     return patches;
 }

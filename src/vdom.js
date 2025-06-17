@@ -85,69 +85,41 @@ function diffProps(oldProps = {}, newProps = {}) {
   return patches;
 }
 
-// Helper: Diff children
+// Helper: Diff children - FIXED VERSION
 function diffChildren(oldChildren = [], newChildren = []) {
-  // If children are undefined, treat as empty array
   oldChildren = oldChildren || [];
   newChildren = newChildren || [];
 
-  // Build key maps for old and new children
-  const oldKeyed = {};
-  const newKeyed = {};
-
-  oldChildren.forEach((child, i) => {
-    if (child && typeof child === "object" && child.key != null) {
-      oldKeyed[child.key] = { child, index: i };
-    }
-  });
-  newChildren.forEach((child, i) => {
-    if (child && typeof child === "object" && child.key != null) {
-      newKeyed[child.key] = { child, index: i };
-    }
-  });
-
-  // If no keys, fallback to index-based diffing
-  const hasKeys =
-    Object.keys(oldKeyed).length > 0 || Object.keys(newKeyed).length > 0;
-  if (!hasKeys) {
-    const patches = [];
-    const max = Math.max(oldChildren.length, newChildren.length);
-    for (let i = 0; i < max; i++) {
-      patches[i] = diff(oldChildren[i], newChildren[i]);
-    }
-    return patches;
-  }
-
-  // Key-based diffing
+  // Simple position-based diffing (more reliable for filtered lists)
   const patches = [];
-  const usedOldKeys = new Set();
+  const maxLength = Math.max(oldChildren.length, newChildren.length);
 
-  // Go through new children, match by key
-  newChildren.forEach((newChild, i) => {
-    if (newChild && typeof newChild === "object" && newChild.key != null) {
-      const oldEntry = oldKeyed[newChild.key];
-      if (oldEntry) {
-        patches[i] = diff(oldEntry.child, newChild);
-        usedOldKeys.add(newChild.key);
-      } else {
-        // New node (not found in old)
-        patches[i] = diff(undefined, newChild);
+  for (let i = 0; i < maxLength; i++) {
+    const oldChild = oldChildren[i];
+    const newChild = newChildren[i];
+
+    // For keyed elements, check if they're the same item
+    if (
+      oldChild &&
+      newChild &&
+      typeof oldChild === "object" &&
+      typeof newChild === "object" &&
+      oldChild.key &&
+      newChild.key
+    ) {
+      // Same key = update in place
+      if (oldChild.key === newChild.key) {
+        patches[i] = diff(oldChild, newChild);
+      }
+      // Different key = replace (this handles filter changes properly)
+      else {
+        patches[i] = { type: "REPLACE", newVNode: newChild };
       }
     } else {
-      // Fallback for non-keyed nodes
-      patches[i] = diff(oldChildren[i], newChild);
+      // Standard diff for non-keyed or position changes
+      patches[i] = diff(oldChild, newChild);
     }
-  });
-
-  // Any old nodes not present in newChildren should be removed
-  oldChildren.forEach((oldChild, i) => {
-    if (oldChild && typeof oldChild === "object" && oldChild.key != null) {
-      if (!newKeyed[oldChild.key]) {
-        // Place a REMOVE patch at the old index
-        patches[i] = diff(oldChild, undefined);
-      }
-    }
-  });
+  }
 
   return patches;
 }

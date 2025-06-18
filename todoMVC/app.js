@@ -12,7 +12,6 @@ import {
 
 
 // Function to build the app virtual DOM tree based on state
-
 function buildAppVNode(state) {
     let todosToShow = state.todos;
     if (state.filter === "active") {
@@ -23,13 +22,7 @@ function buildAppVNode(state) {
 
     const todoListItems = todosToShow.map(todo => {
         const isEditing = state.editingId === todo.id;
-        return createVNode("li", {
-            "data-id": String(todo.id),
-            class: [
-                isEditing ? "editing" : "",
-                todo.completed ? "completed" : ""
-            ].filter(Boolean).join(" ")
-        }, [
+        const children = [
             createVNode("div", { class: "view" }, [
                 createVNode("input", {
                     class: "toggle",
@@ -38,15 +31,24 @@ function buildAppVNode(state) {
                 }),
                 createVNode("label", {}, [todo.text]),
                 createVNode("button", { class: "destroy" })
-            ]),
-            isEditing
-                ? createVNode("input", {
+            ])
+        ];
+        if (isEditing) {
+            children.push(
+                createVNode("input", {
                     class: "edit",
                     value: todo.text,
                     type: "text"
                 })
-                : null
-        ].filter(Boolean));
+            );
+        }
+        return createVNode("li", {
+            "data-id": String(todo.id),
+            class: [
+                isEditing ? "editing" : "",
+                todo.completed ? "completed" : ""
+            ].filter(Boolean).join(" ")
+        }, children);
     });
 
     const headerVNode = createVNode("header", { class: "header" }, [
@@ -59,55 +61,86 @@ function buildAppVNode(state) {
         })
     ]);
 
-    const mainVNode = state.todos.length > 0
-        ? createVNode("main", { class: "main" }, [
-            createVNode("div", { class: "toggle-all-container" }, [
-                createVNode("input", { class: "toggle-all", type: "checkbox" }),
-                createVNode("label", { class: "toggle-all-label", for: "toggle-all" }, ["Mark all as complete"])
-            ]),
-            createVNode("ul", { class: "todo-list" }, todoListItems)
-        ])
-        : null;
+    const mainVNode = createVNode("main", {
+        class: "main",
+        style: state.todos.length === 0 ? "display: none;" : undefined
+    }, [
+        createVNode("div", { class: "toggle-all-container" }, [
+            createVNode("input", { class: "toggle-all", type: "checkbox" }),
+            createVNode("label", { class: "toggle-all-label", for: "toggle-all" }, ["Mark all as complete"])
+        ]),
+        createVNode("ul", { class: "todo-list" }, todoListItems)
+    ]);
 
-    const footerVNode = state.todos.length > 0
-        ? createVNode("footer", { class: "footer" }, [
-            createVNode("span", { class: "todo-count" }, [
-                createVNode("strong", {}, [String(state.todos.filter(t => !t.completed).length)]),
-                ` item${state.todos.filter(t => !t.completed).length === 1 ? '' : 's'} left`
+    // Build filters
+    const filters = [
+        createVNode("li", {}, [
+            createVNode("a", {
+                href: "#/",
+                class: state.filter === "all" ? "selected" : ""
+            }, ["All"])
+        ]),
+        createVNode("li", {}, [
+            createVNode("a", {
+                href: "#/active",
+                class: state.filter === "active" ? "selected" : ""
+            }, ["Active"])
+        ]),
+        createVNode("li", {}, [
+            createVNode("a", {
+                href: "#/completed",
+                class: state.filter === "completed" ? "selected" : ""
+            }, ["Completed"])
+        ])
+    ];
+
+    // Build footer children    
+    const hasCompleted = state.todos.some(t => t.completed);
+
+    const footerChildren = [
+        createVNode("span", { class: "todo-count" }, [
+            createVNode("strong", {}, [String(state.todos.filter(t => !t.completed).length)]),
+            ` item${state.todos.filter(t => !t.completed).length === 1 ? '' : 's'} left`
+        ]),
+        createVNode("ul", { class: "filters" }, [
+            createVNode("li", {}, [
+                createVNode("a", {
+                    href: "#/",
+                    class: state.filter === "all" ? "selected" : ""
+                }, ["All"])
             ]),
-            createVNode("ul", { class: "filters" }, [
-                createVNode("li", {}, [
-                    createVNode("a", {
-                        href: "#/",
-                        class: state.filter === "all" ? "selected" : ""
-                    }, ["All"])
-                ]),
-                createVNode("li", {}, [
-                    createVNode("a", {
-                        href: "#/active",
-                        class: state.filter === "active" ? "selected" : ""
-                    }, ["Active"])
-                ]),
-                createVNode("li", {}, [
-                    createVNode("a", {
-                        href: "#/completed",
-                        class: state.filter === "completed" ? "selected" : ""
-                    }, ["Completed"])
-                ])
+            createVNode("li", {}, [
+                createVNode("a", {
+                    href: "#/active",
+                    class: state.filter === "active" ? "selected" : ""
+                }, ["Active"])
             ]),
-            state.todos.some(t => t.completed)
-                ? createVNode("button", { class: "clear-completed" }, ["Clear completed"])
-                : null
-        ].filter(Boolean))
-        : null;
+            createVNode("li", {}, [
+                createVNode("a", {
+                    href: "#/completed",
+                    class: state.filter === "completed" ? "selected" : ""
+                }, ["Completed"])
+            ])
+        ]),
+        // Always include the button, toggle visibility with style
+        createVNode("button", {
+            class: "clear-completed",
+            style: hasCompleted ? undefined : "display: none;"
+        })
+    ];
+
+    const footerVNode = createVNode("footer", {
+        class: "footer",
+        style: state.todos.length === 0 ? "display: none;" : undefined
+    }, footerChildren);
+
 
     return createVNode("section", { class: "todoapp" }, [
         headerVNode,
         mainVNode,
         footerVNode
-    ].filter(Boolean));
+    ]);
 }
-
 
 
 // ---- App Initialization ----

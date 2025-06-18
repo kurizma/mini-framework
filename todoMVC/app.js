@@ -103,21 +103,20 @@ function buildAppVNode(state) {
         attrs: { class: "main" },
         children: [
             {
-                tag: "input",
-                attrs: { 
-                    id: "toggle-all",
-                    class: "toggle-all", 
-                    type: "checkbox"
-                },
-                children: []
-            },
-            {
-                tag: "label",
-                attrs: { 
-                    for: "toggle-all",
-                    class: "toggle-all-label"
-                },
-                children: ["Mark all as complete"]
+                tag: "div",
+                attrs: { class: "toggle-all-container" },
+                children: [
+                    {
+                        tag: "input",
+                        attrs: { class: "toggle-all", type: "checkbox" },
+                        children: []
+                    },
+                    {
+                        tag: "label",
+                        attrs: { class: "toggle-all-label", for: "toggle-all" },
+                        children: ["Mark all as complete"]
+                    }
+                ]
             },
             {
                 tag: "ul",

@@ -36,12 +36,14 @@ function notify() {
 }
 
 // Add a new todo
+let nextTodoId = 1
+
 export function addTodo(text) {
     state = {
         ...state,
         todos: [
             {
-                id: Date.now(),
+                id: nextTodoId++,
                 text,
                 completed: false
             },

@@ -10,8 +10,55 @@ import {
     router 
 } from "../src/framework.js";
 
+// createVNode(tag, attrs = {}, children = [])
+// Root Node - static
+function buildRootVNode(state) {
+    return [
+        // aside
+        createVNode("aside", { class: "learn" }, [
+            createVNode("header", {}, [
+                createVNode("h3", {}, ["JavaScript ES6"]),
+                createVNode("span", { class: "source-links" }, [
+                    createVNode("h5", {}, ["Example"]),
+                    createVNode("a", { href: "https://github.com/tastejs/todomvc/tree/gh-pages/examples/javascript-es6" 
+                    }, ["Source"])
+                ])
+            ]),
+            createVNode("hr"),
+            createVNode("blockquote", { class: "quote speech-bubble" }, [
+                createVNode("p", {}, [
+                    "The ECMAScript 6 (ES2015) standard was ratified in 2015 following years of work standardizing improvements to ECMAScript 3. The committee introduced a wide variety of improvements such as arrow functions, const declarations, and native Promises."
+                ]),
+                createVNode("footer", {}, [
+                    createVNode("a", { href: "http://developer.mozilla.org/en-US/docs/JavaScript" }, ["JavaScript ES6"])
+                ])
+            ]),
+            createVNode("footer", {}, [
+                createVNode("hr"),
+                createVNode("em", {}, [
+                    'If you have other helpful links to share, or find any of the links above no longer work, please ',
+                    createVNode('a', { href:"https://github.com/tastejs/todomvc/issues" }, ["let us know"]),
+                    '.'
+                ])
+            ])
+        ]),
+        // main App (dynamic)
+        buildAppVNode(state),
 
-// Function to build the app virtual DOM tree based on state
+        // info footer
+        createVNode("footer", { class: "info" }, [
+            createVNode("p", {}, ["Double-click to edit a todo"]),
+            createVNode("p", {}, ["Created by the JOGA Team"]),
+            createVNode("p", {}, [
+                "Part of ",
+                createVNode("a", { href: "http://todomvc.com" }, ["JOGA"])
+            ])
+        ])
+    ];
+}
+
+/// ------------ /// 
+// main app vnode
 function buildAppVNode(state) {
     let todosToShow = state.todos;
     if (state.filter === "active") {
@@ -56,8 +103,7 @@ function buildAppVNode(state) {
         createVNode("input", {
             class: "new-todo",
             placeholder: "What needs to be done?",
-            autofocus: "",
-            type: "text"
+            autofocus: ""
         })
     ]);
 
@@ -125,8 +171,8 @@ function buildAppVNode(state) {
         // Always include the button, toggle visibility with style
         createVNode("button", {
             class: "clear-completed",
-            style: hasCompleted ? undefined : "display: none;"
-        })
+            style: hasCompleted ? "display: block" : "display: none;"
+        },  hasCompleted ? ["Clear completed"] : [])
     ];
 
     const footerVNode = createVNode("footer", {
@@ -142,18 +188,21 @@ function buildAppVNode(state) {
     ]);
 }
 
+/// ------------ /// 
 
 // ---- App Initialization ----
 
 // 1. Initial render
-let oldVNode = buildAppVNode(getState());
-const appRoot = document.getElementById('app');
+console.log('Root VNode:', buildRootVNode(getState()));
+let oldVNode = buildRootVNode(getState());
+const appRoot = document.body;
 let rootDomNode = renderElement(oldVNode);
+console.log('Rendered DOM:', rootDomNode);
 appRoot.appendChild(rootDomNode);
 
 // 2. UI update function (called on state changes)
 function updateUI() {
-    const newVNode = buildAppVNode(getState());
+    const newVNode = buildRootVNode(getState());
     const patchObj = diff(oldVNode, newVNode);
     rootDomNode = patch(appRoot, rootDomNode, patchObj);
     oldVNode = newVNode;
@@ -174,3 +223,7 @@ router.addRoute('/completed', () => setFilter('completed'));
 
 // Start router
 router.handleRoute();
+
+
+
+

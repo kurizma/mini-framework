@@ -6,6 +6,7 @@
  * - Invalid nodes are handled gracefully with warnings.
  */
 export function renderElement(node) {
+    console.log('renderElement called with node:', node);
     try {
         // string handling
         if (typeof node === "string") {
@@ -200,39 +201,44 @@ export function patch(parent, domNode, patchObj, index = 0) {
             let domChildIndex = 0;
 
             for (let i = 0; i < patchObj.children.length; i++) {
-            const childPatch = patchObj.children[i];
-            const oldChildNode = childNodes[domChildIndex];
+                const childPatch = patchObj.children[i];
+                const oldChildNode = childNodes[domChildIndex];
 
-            // If patch is a CREATE, insert new node
-            if (childPatch && childPatch.type === "CREATE") {
-                const newChildDom = renderElement(childPatch.newVNode);
-                domNode.insertBefore(newChildDom, oldChildNode || null);
-                domChildIndex++;
-            }
-            // If patch is a REMOVE, remove the node
-            else if (childPatch && childPatch.type === "REMOVE") {
-                if (oldChildNode && oldChildNode.parentNode === domNode) {
-                domNode.removeChild(oldChildNode);
+                if (!oldChildNode) {
+                    // No existing DOM node at this position: CREATE
+                    if (childPatch && childPatch.type === "CREATE") {
+                        const newChildDom = renderElement(childPatch.newVNode);
+                        domNode.appendChild(newChildDom);
+
+                    }
+                } else if (childPatch && childPatch.type === "CREATE") { 
+                    // If patch is a CREATE, insert new node
+                    const newChildDom = renderElement(childPatch.newVNode);
+                    domNode.insertBefore(newChildDom, oldChildNode);
+                    domChildIndex++;
+                } else if (childPatch && childPatch.type === "REMOVE") {
+                    // If patch is a REMOVE, remove the node
+                    // Insert before existing node
+                    if (oldChildNode && oldChildNode.parentNode === domNode) {
+                    domNode.removeChild(oldChildNode);
+                    }
+                    // Do not increment domChildIndex since node was removed
+                } else {        // Otherwise, patch the existing node
+                    if (oldChildNode) {
+                        patch(domNode, oldChildNode, childPatch, i);
+                        }
+                    domChildIndex++;
                 }
-                // Do not increment domChildIndex since node was removed
             }
-            // Otherwise, patch the existing node
-            else {
-                if (oldChildNode) {
-                patch(domNode, oldChildNode, childPatch, i);
-                }
-                domChildIndex++;
-            }
-        }
 
         // Remove any extra old nodes
             while (domNode.childNodes.length > patchObj.children.length) {
-            const last = domNode.lastChild;
-            if (last && last.parentNode === domNode) {
-                domNode.removeChild(last);
-            } else {
-                break;
-            }
+                const last = domNode.lastChild;
+                if (last && last.parentNode === domNode) {
+                    domNode.removeChild(last);
+                } else {
+                    break;
+                }
             }
             return domNode;
         }

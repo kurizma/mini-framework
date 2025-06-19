@@ -342,6 +342,11 @@ body {
     text-decoration: underline
 }
 
+.info p a {
+    margin: 0 8px;
+    display: inline-block;
+}
+
 @media screen and (-webkit-min-device-pixel-ratio: 0) {
     .todo-list li .toggle,.toggle-all {
         background:none

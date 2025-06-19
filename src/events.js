@@ -2,6 +2,7 @@
 import { addTodo, toggleTodo, removeTodo, setFilter, getState, setEditing, clearEditing, updateTodo } from "./state.js";
 
 function handleTodoListClick(e) {
+    console.log('handleTodoListClick', e.target);
     const li = e.target.closest('li[data-id]');
     if (!li) return;
     const id = Number(li.getAttribute('data-id'));
@@ -11,6 +12,7 @@ function handleTodoListClick(e) {
 }
 
 function handleTodoListChange(e) {
+    console.log('handleTodoListChange', e.target);
     if (!e.target.classList.contains('toggle')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -19,6 +21,7 @@ function handleTodoListChange(e) {
 }
 
 function handleTodoListDblClick(e) {
+    console.log('handleTodoListDblClick', e.target);
     if (e.target.tagName === "LABEL") {
         const li = e.target.closest('li[data-id]');
         if (!li) return;
@@ -32,6 +35,7 @@ function handleTodoListDblClick(e) {
 }
 
 function handleTodoListKeyDown(e) {
+    console.log('handleTodoListKeyDown', e.target, e.key);
     if (!e.target.classList.contains('edit')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -46,6 +50,7 @@ function handleTodoListKeyDown(e) {
 }
 
 function handleTodoListBlur(e) {
+    console.log('handleTodoListBlur', e.target);
     if (!e.target.classList.contains('edit')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -63,6 +68,7 @@ export function setupEventListeners(appRoot) {
         
         // Create named handler for proper cleanup
         input._todoKeyHandler = (e) => {
+            console.log('new-todo keydown', e.key);
             if (e.key === 'Enter' && input.value.trim()) {
                 addTodo(input.value.trim());
                 input.value = '';
@@ -72,10 +78,12 @@ export function setupEventListeners(appRoot) {
     }
 
     // ✅ Handle toggle-all functionality
-    const toggleAll = appRoot.querySelector('#toggle-all');
+    const toggleAll = appRoot.querySelector('.toggle-all');
+    // const toggleAll = appRoot.querySelector('#toggle-all');
     if (toggleAll) {
         toggleAll.removeEventListener('change', toggleAll._toggleAllHandler);
         toggleAll._toggleAllHandler = (e) => {
+            console.log('toggle-all changed');
             const { todos } = getState();
             const areAllCompleted = todos.every(t => t.completed);
             todos.forEach(todo => {
@@ -119,10 +127,12 @@ export function setupEventListeners(appRoot) {
     });
 
     // Clear completed
+
     const clearBtn = appRoot.querySelector('.clear-completed');
     if (clearBtn) {
         clearBtn.removeEventListener('click', clearBtn._clearHandler);
         clearBtn._clearHandler = () => {
+            console.log('clear-completed clicked');
             const { todos } = getState();
             todos.filter(t => t.completed).forEach(t => removeTodo(t.id));
         };

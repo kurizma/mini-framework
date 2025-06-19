@@ -13,25 +13,42 @@ export function renderElement(node) {
             return document.createTextNode(node);
         }
 
-        // array handling
-        if (Array.isArray(node)) {
-            const fragment = document.createDocumentFragment();
-            node.forEach(child => {
-                if (child !== undefined && child !== null) {
-                    fragment.appendChild(renderElement(child));
-                }
-            });
-            return fragment;
-        }
-
         if (!node || !node.tag) {
             console.warn("Invalid node passed to renderElement:", node);
             return document.createTextNode("");
         }
 
+        // Special handling for <body>
+        let el;
+        if (node.tag === "body") {
+            el = document.body; // Use the existing body
+            
+            for (const [key, value] of Object.entries(node.attrs || {})) {
+                if (key.startsWith("on") && typeof value === "function") {
+                    const eventName = key.slice(2).toLowerCase();
+                    el.addEventListener(eventName, value);
+                } else {
+                    el.setAttribute(key, value);
+                }
+            }
 
-        // full node handling
-        const el = document.createElement(node.tag);
+            // Remove all existing children before re-rendering
+            while (el.firstChild) {
+                el.removeChild(el.firstChild);
+            }
+        } else {
+            el = document.createElement(node.tag);
+
+            for (const [key, value] of Object.entries(node.attrs || {})) {
+                if (key.startsWith("on") && typeof value === "function") {
+                    const eventName = key.slice(2).toLowerCase();
+                    el.addEventListener(eventName, value);
+                } else {
+                    el.setAttribute(key, value);
+                }
+            }
+        }
+
         // Handle attributes and events
         for (const [key, value] of Object.entries(node.attrs || {})) {
             if (key.startsWith("on") && typeof value === "function") {
@@ -209,7 +226,6 @@ export function patch(parent, domNode, patchObj, index = 0) {
                     if (childPatch && childPatch.type === "CREATE") {
                         const newChildDom = renderElement(childPatch.newVNode);
                         domNode.appendChild(newChildDom);
-
                     }
                 } else if (childPatch && childPatch.type === "CREATE") { 
                     // If patch is a CREATE, insert new node
@@ -225,7 +241,7 @@ export function patch(parent, domNode, patchObj, index = 0) {
                     // Do not increment domChildIndex since node was removed
                 } else {        // Otherwise, patch the existing node
                     if (oldChildNode) {
-                        patch(domNode, oldChildNode, childPatch, i);
+                            patch(domNode, oldChildNode, childPatch, i);
                         }
                     domChildIndex++;
                 }

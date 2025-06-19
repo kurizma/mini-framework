@@ -14,7 +14,8 @@ import {
 // Root Node - static
 function buildRootVNode(state) {
     console.log('buildRootVNode called with state:', state);
-    return [
+    return createVNode("body", { class: "learn-bar" }, [
+
         // aside
         createVNode("aside", { class: "learn" }, [
             createVNode("header", {}, [
@@ -43,6 +44,7 @@ function buildRootVNode(state) {
                 ])
             ])
         ]),
+
         // main App (dynamic)
         buildAppVNode(state),
 
@@ -59,7 +61,7 @@ function buildRootVNode(state) {
 
             ])
         ])
-    ];
+    ]);
 }
 
 /// ------------ /// 
@@ -198,20 +200,20 @@ function buildAppVNode(state) {
 
 // ---- App Initialization ----
 
-// 1. Initial render
+
 let oldVNode = buildRootVNode(getState());
-const appRoot = document.body;
-let rootDomNode = renderElement(oldVNode);
-appRoot.appendChild(rootDomNode);
+const appRoot = document.documentElement // <html>; parent
+let rootDomNode = renderElement(oldVNode); // This will update the real <body>
 
 // 2. UI update function (called on state changes)
 function updateUI() {
     console.log('updateUI called');
     const newVNode = buildRootVNode(getState());
     const patchObj = diff(oldVNode, newVNode);
-    rootDomNode = patch(appRoot, rootDomNode, patchObj);
+    rootDomNode = patch(appRoot, rootDomNode, patchObj); // patch <body> on <html>
     oldVNode = newVNode;
-    setupEventListeners(appRoot);
+    console.log('updateUI called', rootDomNode);
+    setupEventListeners(rootDomNode);
 }
 
 // 3. Subscribe UI updates to state changes
@@ -219,7 +221,7 @@ function updateUI() {
 subscribe(updateUI);
 
 // event listening for input
-setupEventListeners(appRoot);
+setupEventListeners(rootDomNode);
 
 // Initialize router with filter routes
 router.addRoute('/', () => setFilter('all'));

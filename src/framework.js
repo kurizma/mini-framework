@@ -4,10 +4,11 @@ export { setupEventListeners } from './events.js';
 export { router } from './router.js';
 
 // Framework helper function for creating virtual nodes
-export function createVNode(tag, attrs = {}, children = []) {
+export function createVNode(tag, attrs = {}, children = [], key = undefined) {
     return {
         tag,
         attrs,
-        children: Array.isArray(children) ? children : [children]
+        children: Array.isArray(children) ? children : [children],
+        key
     };
 }

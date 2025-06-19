@@ -10,9 +10,64 @@ import {
     router 
 } from "../src/framework.js";
 
+// createVNode(tag, attrs = {}, children = [])
+// Root Node - static
+function buildRootVNode(state) {
+    console.log('buildRootVNode called with state:', state);
+    return createVNode("body", { class: "learn-bar" }, [
 
-// Function to build the app virtual DOM tree based on state
+        // aside
+        createVNode("aside", { class: "learn" }, [
+            createVNode("header", {}, [
+                createVNode("h3", {}, ["mini-framework"]),
+                createVNode("span", { class: "source-links" }, [
+                    // createVNode("h5", {}, ["Example"]),
+                    createVNode("a", { href: "https://github.com/kurizma/mini-framework" 
+                    }, ["Source"])
+                ])
+            ]),
+            createVNode("hr"),
+            createVNode("blockquote", { class: "quote speech-bubble" }, [
+                createVNode("p", {}, [
+                    "This mini-framework project challenges you to build a modern JavaScript web application framework from scratch—no React, Vue, or Angular allowed. It demonstrates core features like virtual DOM rendering, state management, custom event handling, and client-side routing, all implemented by hand. The TodoMVC example here is built entirely on this framework, showing how you can compose UI, manage state, and handle user interactions with just a few simple abstractions."
+                ]),
+                createVNode("footer", {}, [
+                    createVNode("a", { href: "https://github.com/01-edu/public/tree/master/subjects/mini-framework" }, ["mini-framework"])
+                ])
+            ]),
+            createVNode("footer", {}, [
+                createVNode("hr"),
+                createVNode("em", {}, [
+                    'If you have other helpful links to share, or find any of the links above no longer work, please ',
+                    createVNode('a', { href: "https://github.com/kurizma/mini-framework/issues" }, ["let us know"]),
+                    '.'
+                ])
+            ])
+        ]),
+
+        // main App (dynamic)
+        buildAppVNode(state),
+
+        // info footer
+        createVNode("footer", { class: "info" }, [
+            createVNode("p", {}, ["Double-click to edit a todo"]),
+            createVNode("p", {}, ["Created by the JOGA Team"]),
+            createVNode("p", {}, ["Part of JOGA",]),
+            createVNode("p", {}, [
+                createVNode("a", { href: "https://github.com/kurizma" }, ["Joon Kim"]),
+                createVNode("a", { href: "https://github.com/oafilali" }, ["Othmane Afilali"]),
+                createVNode("a", { href: "https://github.com/gigiAddams" }, ["Geraldine Addamo"]),
+                createVNode("a", { href: "https://github.com/AllenLeeyn" }, ["Allen Leeyn"]),
+
+            ])
+        ])
+    ]);
+}
+
+/// ------------ /// 
+// main app vnode
 function buildAppVNode(state) {
+    console.log('buildRootVNode called with state:', state);
     let todosToShow = state.todos;
     if (state.filter === "active") {
         todosToShow = todosToShow.filter(t => !t.completed);
@@ -48,7 +103,7 @@ function buildAppVNode(state) {
                 isEditing ? "editing" : "",
                 todo.completed ? "completed" : ""
             ].filter(Boolean).join(" ")
-        }, children);
+        }, children, todo.id);
     });
 
     const headerVNode = createVNode("header", { class: "header" }, [
@@ -56,8 +111,7 @@ function buildAppVNode(state) {
         createVNode("input", {
             class: "new-todo",
             placeholder: "What needs to be done?",
-            autofocus: "",
-            type: "text"
+            autofocus: ""
         })
     ]);
 
@@ -125,8 +179,8 @@ function buildAppVNode(state) {
         // Always include the button, toggle visibility with style
         createVNode("button", {
             class: "clear-completed",
-            style: hasCompleted ? undefined : "display: none;"
-        })
+            style: hasCompleted ? "display: block" : "display: none;"
+        },  hasCompleted ? ["Clear completed"] : [])
     ];
 
     const footerVNode = createVNode("footer", {
@@ -142,22 +196,24 @@ function buildAppVNode(state) {
     ]);
 }
 
+/// ------------ /// 
 
 // ---- App Initialization ----
 
-// 1. Initial render
-let oldVNode = buildAppVNode(getState());
-const appRoot = document.getElementById('app');
-let rootDomNode = renderElement(oldVNode);
-appRoot.appendChild(rootDomNode);
+
+let oldVNode = buildRootVNode(getState());
+const appRoot = document.documentElement // <html>; parent
+let rootDomNode = renderElement(oldVNode); // This will update the real <body>
 
 // 2. UI update function (called on state changes)
 function updateUI() {
-    const newVNode = buildAppVNode(getState());
+    console.log('updateUI called');
+    const newVNode = buildRootVNode(getState());
     const patchObj = diff(oldVNode, newVNode);
-    rootDomNode = patch(appRoot, rootDomNode, patchObj);
+    rootDomNode = patch(appRoot, rootDomNode, patchObj); // patch <body> on <html>
     oldVNode = newVNode;
-    setupEventListeners(appRoot);
+    console.log('updateUI called', rootDomNode);
+    setupEventListeners(rootDomNode);
 }
 
 // 3. Subscribe UI updates to state changes
@@ -165,7 +221,7 @@ function updateUI() {
 subscribe(updateUI);
 
 // event listening for input
-setupEventListeners(appRoot);
+setupEventListeners(rootDomNode);
 
 // Initialize router with filter routes
 router.addRoute('/', () => setFilter('all'));
@@ -174,3 +230,7 @@ router.addRoute('/completed', () => setFilter('completed'));
 
 // Start router
 router.handleRoute();
+
+
+
+

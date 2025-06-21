@@ -94,6 +94,7 @@ export function diff(oldVNode, newVNode) {
     if (oldVNode.tag !== newVNode.tag) {
         return { type: "REPLACE", newVNode };
     }
+    
     // 5. If tags are the same, diff attributes and children (expand later)
     return {
         type: "UPDATE",

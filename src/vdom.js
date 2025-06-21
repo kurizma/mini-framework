@@ -13,6 +13,12 @@ export function renderElement(node) {
             return document.createTextNode(node);
         }
 
+        // Disallow arrays as root node
+        if (Array.isArray(node)) {
+            console.warn("Arrays are not allowed as root nodes in renderElement:", node);
+            return document.createTextNode("");
+        }
+
         if (!node || !node.tag) {
             console.warn("Invalid node passed to renderElement:", node);
             return document.createTextNode("");
@@ -46,17 +52,6 @@ export function renderElement(node) {
                 } else {
                     el.setAttribute(key, value);
                 }
-            }
-        }
-
-        // Handle attributes and events
-        for (const [key, value] of Object.entries(node.attrs || {})) {
-            if (key.startsWith("on") && typeof value === "function") {
-                // Handle event listeners
-                const eventName = key.slice(2).toLowerCase();
-                el.addEventListener(eventName, value);
-            } else {
-                el.setAttribute(key, value);
             }
         }
 
@@ -99,6 +94,7 @@ export function diff(oldVNode, newVNode) {
     if (oldVNode.tag !== newVNode.tag) {
         return { type: "REPLACE", newVNode };
     }
+    
     // 5. If tags are the same, diff attributes and children (expand later)
     return {
         type: "UPDATE",
@@ -172,98 +168,113 @@ function diffChildren(oldChildren = [], newChildren = []) {
 
 // Patch: Apply a patch object (from `diff`) to the real DOM
 // handles all patch types (CREATE, REMOVE, TEXT, REPLACE, UPDATE) and is recursive for children.
+// see below `patch` to see helper function
+
 export function patch(parent, domNode, patchObj, index = 0) {
     if (!patchObj) return domNode;
-
     try {
         switch (patchObj.type) {
-        case "CREATE": {
-            const newDom = renderElement(patchObj.newVNode);
-            parent.appendChild(newDom);
-            return newDom;
-        }
-        case "REMOVE": {
-            if (domNode && domNode.parentNode === parent) {
-            parent.removeChild(domNode);
-            }
-            return null;
-        }
-        case "TEXT": {
-            if (domNode && domNode.nodeType === Node.TEXT_NODE) {
-            domNode.textContent = patchObj.text;
-            }
-            return domNode;
-        }
-        case "REPLACE": {
-            const newDom = renderElement(patchObj.newVNode);
-            if (domNode && domNode.parentNode === parent) {
-            parent.replaceChild(newDom, domNode);
-            }
-            return newDom;
-        }
-        case "UPDATE": {
-            if (!domNode) return domNode;
-
-            // Update attributes
-            patchObj.props.forEach(({ key, value }) => {
-            if (value === undefined) {
-                domNode.removeAttribute(key);
-            } else {
-                domNode.setAttribute(key, value);
-            }
-            });
-
-            // Patch children (key-based)
-            const childNodes = Array.from(domNode.childNodes);
-            let domChildIndex = 0;
-
-            for (let i = 0; i < patchObj.children.length; i++) {
-                const childPatch = patchObj.children[i];
-                const oldChildNode = childNodes[domChildIndex];
-
-                if (!oldChildNode) {
-                    // No existing DOM node at this position: CREATE
-                    if (childPatch && childPatch.type === "CREATE") {
-                        const newChildDom = renderElement(childPatch.newVNode);
-                        domNode.appendChild(newChildDom);
-                    }
-                } else if (childPatch && childPatch.type === "CREATE") { 
-                    // If patch is a CREATE, insert new node
-                    const newChildDom = renderElement(childPatch.newVNode);
-                    domNode.insertBefore(newChildDom, oldChildNode);
-                    domChildIndex++;
-                } else if (childPatch && childPatch.type === "REMOVE") {
-                    // If patch is a REMOVE, remove the node
-                    // Insert before existing node
-                    if (oldChildNode && oldChildNode.parentNode === domNode) {
-                    domNode.removeChild(oldChildNode);
-                    }
-                    // Do not increment domChildIndex since node was removed
-                } else {        // Otherwise, patch the existing node
-                    if (oldChildNode) {
-                            patch(domNode, oldChildNode, childPatch, i);
-                        }
-                    domChildIndex++;
-                }
-            }
-
-        // Remove any extra old nodes
-            while (domNode.childNodes.length > patchObj.children.length) {
-                const last = domNode.lastChild;
-                if (last && last.parentNode === domNode) {
-                    domNode.removeChild(last);
-                } else {
-                    break;
-                }
-            }
-            return domNode;
-        }
-        default:
-            console.warn("Unknown patch type:", patchObj.type);
-            return domNode;
+            case "CREATE":
+                return patchCreate(parent, patchObj);
+            case "REMOVE":
+                return patchRemove(parent, domNode);
+            case "TEXT":
+                return patchText(domNode, patchObj);
+            case "REPLACE":
+                return patchReplace(parent, domNode, patchObj);
+            case "UPDATE":
+                return patchUpdate(domNode, patchObj);
+            default:
+                console.warn("Unknown patch type:", patchObj.type);
+                return domNode;
         }
     } catch (error) {
         console.error("Error applying patch:", error, patchObj);
         return domNode;
+    }
+}
+
+function patchCreate(parent, patchObj) {
+    const newDom = renderElement(patchObj.newVNode);
+    parent.appendChild(newDom);
+    return newDom;
+}
+
+function patchRemove(parent, domNode) {
+    if (domNode && domNode.parentNode === parent) {
+        parent.removeChild(domNode);
+    }
+    return null;
+}
+
+function patchText(domNode, patchObj) {
+    if (domNode && domNode.nodeType === Node.TEXT_NODE) {
+        domNode.textContent = patchObj.text;
+    }
+    return domNode;
+}
+
+function patchReplace(parent, domNode, patchObj) {
+    const newDom = renderElement(patchObj.newVNode);
+    if (domNode && domNode.parentNode === parent) {
+        parent.replaceChild(newDom, domNode);
+    }
+    return newDom;
+}
+
+function patchUpdate(domNode, patchObj) {
+    if (!domNode) return domNode;
+    // Update attributes
+    patchObj.props.forEach(({ key, value }) => {
+        if (value === undefined) {
+            domNode.removeAttribute(key);
+        } else {
+            domNode.setAttribute(key, value);
+        }
+    });
+    // Patch children
+    patchChildren(domNode, patchObj.children);
+    return domNode;
+}
+
+function patchChildren(domNode, childrenPatches) {
+    const childNodes = Array.from(domNode.childNodes);
+    let domChildIndex = 0;
+    for (let i = 0; i < childrenPatches.length; i++) {
+        const childPatch = childrenPatches[i];
+        const oldChildNode = childNodes[domChildIndex];
+
+        if (!oldChildNode) {
+            // No existing DOM node at this position: CREATE
+            if (childPatch && childPatch.type === "CREATE") {
+                const newChildDom = renderElement(childPatch.newVNode);
+                domNode.appendChild(newChildDom);
+            }
+        } else if (childPatch && childPatch.type === "CREATE") {
+            // Insert before existing node
+            const newChildDom = renderElement(childPatch.newVNode);
+            domNode.insertBefore(newChildDom, oldChildNode);
+            domChildIndex++;
+        } else if (childPatch && childPatch.type === "REMOVE") {
+            if (oldChildNode && oldChildNode.parentNode === domNode) {
+                domNode.removeChild(oldChildNode);
+            }
+            // Do not increment domChildIndex since node was removed
+        } else {
+            if (oldChildNode) {
+                patch(domNode, oldChildNode, childPatch, i);
+                domChildIndex++;
+            }
+        }
+    }
+
+    // Remove any extra old nodes
+    while (domNode.childNodes.length > childrenPatches.length) {
+        const last = domNode.lastChild;
+        if (last && last.parentNode === domNode) {
+            domNode.removeChild(last);
+        } else {
+            break;
+        }
     }
 }

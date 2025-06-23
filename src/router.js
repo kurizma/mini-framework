@@ -4,8 +4,12 @@ class Router {
         this.currentRoute = '';
         
         // Listen for URL changes
-        window.addEventListener('popstate', () => this.handleRoute());
-        window.addEventListener('hashchange', () => this.handleRoute());
+        //window.addEventListener('popstate', () => this.handleRoute());
+        //window.addEventListener('hashchange', () => this.handleRoute());
+
+        // avoid using addEventListener() as requested
+        window.onpopstate = () => this.handleRoute();
+        window.onhashchange = () => this.handleRoute();
     }
 
     // Register a route

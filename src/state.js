@@ -47,7 +47,7 @@ export function addTodo(text) {
                 text,
                 completed: false
             },
-            ...state.todos // ✅ Put new todo FIRST, old ones after
+            ...state.todos // Put new todo FIRST, old ones after
         ]
     };
     notify();
@@ -55,6 +55,7 @@ export function addTodo(text) {
 
 // Toggle a todo's completion
 export function toggleTodo(id) {
+    console.log('toggleAllTodos', completed);
     state = {
         ...state,
         todos: state.todos.map(todo =>
@@ -69,6 +70,18 @@ export function removeTodo(id) {
     state = {
         ...state,
         todos: state.todos.filter(todo => todo.id !== id)
+    };
+    notify();
+}
+
+// toggle all items
+export function toggleAllTodos(completed) {
+    state = {
+        ...state,
+        todos: state.todos.map(todo => ({
+            ...todo,
+            completed
+        }))
     };
     notify();
 }

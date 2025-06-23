@@ -1,8 +1,8 @@
 // // src/events.js
-import { addTodo, toggleTodo, removeTodo, setFilter, getState, setEditing, clearEditing, updateTodo } from "./state.js";
+import { addTodo, toggleTodo, removeTodo, toggleAllTodos, setFilter, getState, setEditing, clearEditing, updateTodo } from "./state.js";
 
 function handleTodoListClick(e) {
-    console.log('handleTodoListClick', e.target);
+    // console.log('handleTodoListClick', e.target);
     const li = e.target.closest('li[data-id]');
     if (!li) return;
     const id = Number(li.getAttribute('data-id'));
@@ -12,7 +12,7 @@ function handleTodoListClick(e) {
 }
 
 function handleTodoListChange(e) {
-    console.log('handleTodoListChange', e.target);
+    // console.log('handleTodoListChange', e.target);
     if (!e.target.classList.contains('toggle')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -21,7 +21,7 @@ function handleTodoListChange(e) {
 }
 
 function handleTodoListDblClick(e) {
-    console.log('handleTodoListDblClick', e.target);
+    // console.log('handleTodoListDblClick', e.target);
     if (e.target.tagName === "LABEL") {
         const li = e.target.closest('li[data-id]');
         if (!li) return;
@@ -35,7 +35,7 @@ function handleTodoListDblClick(e) {
 }
 
 function handleTodoListKeyDown(e) {
-    console.log('handleTodoListKeyDown', e.target, e.key);
+    // console.log('handleTodoListKeyDown', e.target, e.key);
     if (!e.target.classList.contains('edit')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -50,7 +50,7 @@ function handleTodoListKeyDown(e) {
 }
 
 function handleTodoListBlur(e) {
-    console.log('handleTodoListBlur', e.target);
+    // console.log('handleTodoListBlur', e.target);
     if (!e.target.classList.contains('edit')) return;
     const li = e.target.closest('li[data-id]');
     if (!li) return;
@@ -68,7 +68,7 @@ export function setupEventListeners(appRoot) {
         
         // Create named handler for proper cleanup
         input._todoKeyHandler = (e) => {
-            console.log('new-todo keydown', e.key);
+            // console.log('new-todo keydown', e.key);
             if (e.key === 'Enter' && input.value.trim()) {
                 addTodo(input.value.trim());
                 input.value = '';
@@ -77,20 +77,22 @@ export function setupEventListeners(appRoot) {
         input.addEventListener('keydown', input._todoKeyHandler);
     }
 
-    // ✅ Handle toggle-all functionality
+    // Handle toggle-all functionality
     const toggleAll = appRoot.querySelector('.toggle-all');
     // const toggleAll = appRoot.querySelector('#toggle-all');
     if (toggleAll) {
         toggleAll.removeEventListener('change', toggleAll._toggleAllHandler);
         toggleAll._toggleAllHandler = (e) => {
-            console.log('toggle-all changed');
-            const { todos } = getState();
-            const areAllCompleted = todos.every(t => t.completed);
-            todos.forEach(todo => {
-                if (todo.completed === areAllCompleted) {
-                    toggleTodo(todo.id);
-                }
-            });
+            // console.log('toggle-all changed');
+            // const { todos } = getState();
+            // const areAllCompleted = todos.every(t => t.completed);
+            // todos.forEach(todo => {
+            //     if (todo.completed === areAllCompleted) {
+            //         toggleTodo(todo.id);
+            //     }
+            // });
+            console.log('toggle-all changed', e.target.checked);
+            toggleAllTodos(e.target.checked);
         };
         toggleAll.addEventListener('change', toggleAll._toggleAllHandler);
     }
@@ -113,7 +115,7 @@ export function setupEventListeners(appRoot) {
         todoList.addEventListener('blur', handleTodoListBlur, true);
     }
 
-    // Filter buttons - ✅ Fixed to work with hash routing
+    // Filter buttons 
     const filters = appRoot.querySelectorAll('.filters a');
     filters.forEach(link => {
         link.removeEventListener('click', link._filterHandler);

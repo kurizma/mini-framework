@@ -128,7 +128,11 @@ function buildAppVNode(state) {
         style: state.todos.length === 0 ? "display: none;" : "display: block"
     }, [
         createVNode("div", { class: "toggle-all-container" }, [
-            createVNode("input", { class: "toggle-all", type: "checkbox" }),
+            createVNode("input", {
+                class: "toggle-all",
+                type: "checkbox",
+                checked: state.todos.length > 0 && state.todos.every(t => t.completed) ? "checked" : "",
+            }),
             createVNode("label", { class: "toggle-all-label", for: "toggle-all" }, ["Mark all as complete"])
         ]),
         createVNode("ul", { class: "todo-list" }, todoListItems)
@@ -190,7 +194,7 @@ function buildAppVNode(state) {
 
 // ---- App Initialization ----
 
-// build initial virtual DOM tree from state default
+// 1. build initial virtual DOM tree from state default
 let oldVNode = buildRootVNode(getState());
 const appRoot = document.documentElement // <html>; parent
 let rootDomNode = renderElement(oldVNode); // render initial app into  <body>
@@ -201,7 +205,7 @@ function updateUI() {
     const patchObj = diff(oldVNode, newVNode);
     rootDomNode = patch(appRoot, rootDomNode, patchObj); // patch <body> on <html>
     oldVNode = newVNode;
-    setupEventListeners(rootDomNode); // re-attach event listeners
+    setupEventListeners(appRoot); // re-attach event listeners
 }
 
 // 3. Subscribe UI updates to state changes

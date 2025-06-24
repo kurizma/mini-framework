@@ -39,29 +39,29 @@ function notify() {
 let nextTodoId = 1;
 
 export function addTodo(text) {
-    state = {
-        ...state,
-        todos: [
-            {
-                id: nextTodoId++,
-                text,
-                completed: false
-            },
-            ...state.todos // ✅ Put new todo FIRST, old ones after
-        ]
-    };
-    notify();
+  state = {
+    ...state,
+    todos: [
+      {
+        id: nextTodoId++,
+        text,
+        completed: false,
+      },
+      ...state.todos, // ✅ Put new todo FIRST, old ones after
+    ],
+  };
+  notify();
 }
 
 // Toggle a todo's completion
 export function toggleTodo(id) {
-    state = {
-        ...state,
-        todos: state.todos.map(todo =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        )
-    };
-    notify();
+  state = {
+    ...state,
+    todos: state.todos.map((todo) =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ),
+  };
+  notify();
 }
 
 // Remove a todo
@@ -74,15 +74,27 @@ export function removeTodo(id) {
 }
 
 // toggle all items
-export function toggleAllTodos(completed) {
-    state = {
-        ...state,
-        todos: state.todos.map(todo => ({
-            ...todo,
-            completed
-        }))
-    };
-    notify();
+export function toggleAllTodos(forceCompleted = null) {
+  // If forceCompleted is provided, use it. Otherwise, determine based on current state
+  let newCompletedState;
+
+  if (forceCompleted !== null) {
+    newCompletedState = forceCompleted;
+  } else {
+    // If all todos are completed, mark all as incomplete
+    // If any todo is incomplete, mark all as complete
+    const allCompleted = state.todos.every((todo) => todo.completed);
+    newCompletedState = !allCompleted;
+  }
+
+  state = {
+    ...state,
+    todos: state.todos.map((todo) => ({
+      ...todo,
+      completed: newCompletedState,
+    })),
+  };
+  notify();
 }
 
 // Set the current filter

@@ -249,8 +249,9 @@ function buildAppVNode(state) {
 
 // 1. build initial virtual DOM tree from state default
 let oldVNode = buildRootVNode(getState());
-const appRoot = document.documentElement; // <html>; parent
 let rootDomNode = renderElement(oldVNode); // render initial app into  <body>
+const appRoot = document.querySelector('.todoapp') || document.body;
+setupEventListeners(appRoot);
 
 // 2. UI update function (called on state changes; patch DOM)
 function updateUI() {
@@ -258,7 +259,8 @@ function updateUI() {
     const patchObj = diff(oldVNode, newVNode);
     rootDomNode = patch(appRoot, rootDomNode, patchObj); // patch <body> on <html>
     oldVNode = newVNode;
-    setupEventListeners(rootDomNode); // re-attach event listeners
+    const appRoot = document.querySelector('.todoapp') || document.body;
+    // setupEventListeners(appRoot); // re-attach event listeners
 }
 
 // 3. Subscribe UI updates to state changes
@@ -266,7 +268,7 @@ function updateUI() {
 subscribe(updateUI);
 
 // attach event listeners for the first render
-setupEventListeners(rootDomNode);
+// setupEventListeners(appRoot);
 
 // init + setup routing for filter changes
 router.addRoute("/", () => setFilter("all"));

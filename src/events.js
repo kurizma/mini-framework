@@ -63,8 +63,11 @@ function handleTodoListBlur(e) {
     clearEditing();
 }
 
-const appRoot = document.body
+const appRoot = document.documentElement
 export function setupEventListeners(appRoot) {
+    if (!appRoot) {
+        throw new Error("setupEventListeners: appRoot is undefined!");
+    }
     // Add new todo on Enter key in the input box
     const input = appRoot.querySelector('.new-todo');
     if (input) {

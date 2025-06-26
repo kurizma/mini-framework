@@ -97,23 +97,23 @@ export function setupEventListeners(appRoot) {
         toggleAll.addEventListener('change', toggleAll._toggleAllHandler);
     }
 
-  const todoList = appRoot.querySelector(".todo-list");
-  if (todoList) {
-    todoList.removeEventListener("click", handleTodoListClick);
-    todoList.addEventListener("click", handleTodoListClick);
+    const todoList = appRoot.querySelector(".todo-list");
+    if (todoList) {
+        todoList.removeEventListener("click", handleTodoListClick);
+        todoList.addEventListener("click", handleTodoListClick);
 
-    todoList.removeEventListener("change", handleTodoListChange);
-    todoList.addEventListener("change", handleTodoListChange);
+        todoList.removeEventListener("change", handleTodoListChange);
+        todoList.addEventListener("change", handleTodoListChange);
 
-    todoList.removeEventListener("dblclick", handleTodoListDblClick);
-    todoList.addEventListener("dblclick", handleTodoListDblClick);
+        todoList.removeEventListener("dblclick", handleTodoListDblClick);
+        todoList.addEventListener("dblclick", handleTodoListDblClick);
 
-    todoList.removeEventListener("keydown", handleTodoListKeyDown);
-    todoList.addEventListener("keydown", handleTodoListKeyDown);
+        todoList.removeEventListener("keydown", handleTodoListKeyDown);
+        todoList.addEventListener("keydown", handleTodoListKeyDown);
 
-    todoList.removeEventListener("blur", handleTodoListBlur, true);
-    todoList.addEventListener("blur", handleTodoListBlur, true);
-  }
+        todoList.removeEventListener("blur", handleTodoListBlur, true);
+        todoList.addEventListener("blur", handleTodoListBlur, true);
+    }
 
     // Filter buttons 
     const filters = appRoot.querySelectorAll('.filters a');
@@ -130,14 +130,14 @@ export function setupEventListeners(appRoot) {
 
   // Clear completed
 
-  const clearBtn = appRoot.querySelector(".clear-completed");
-  if (clearBtn) {
-    clearBtn.removeEventListener("click", clearBtn._clearHandler);
-    clearBtn._clearHandler = () => {
-      console.log("clear-completed clicked");
-      const { todos } = getState();
-      todos.filter((t) => t.completed).forEach((t) => removeTodo(t.id));
-    };
-    clearBtn.addEventListener("click", clearBtn._clearHandler);
-  }
+    const clearBtn = appRoot.querySelector(".clear-completed");
+    if (clearBtn) {
+        clearBtn.removeEventListener("click", clearBtn._clearHandler);
+        clearBtn._clearHandler = () => {
+        console.log("clear-completed clicked");
+        const { todos } = getState();
+        todos.filter((t) => t.completed).forEach((t) => removeTodo(t.id));
+        };
+        clearBtn.addEventListener("click", clearBtn._clearHandler);
+    }
 }

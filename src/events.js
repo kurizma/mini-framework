@@ -41,8 +41,10 @@ function handleTodoListKeyDown(e) {
     if (!li) return;
     const id = Number(li.getAttribute('data-id'));
     if (e.key === 'Enter') {
-        updateTodo(id, e.target.value.trim());
-        clearEditing();
+    const trimmed = e.target.value.trim();
+    const previousValue = getState().todos.find((todo) => todo.id === id)?.text ?? "";
+    updateTodo(id, trimmed.length > 0 ? trimmed : previousValue);
+    clearEditing();
     }
     if (e.key === 'Escape') {
         clearEditing();
@@ -55,10 +57,13 @@ function handleTodoListBlur(e) {
     const li = e.target.closest('li[data-id]');
     if (!li) return;
     const id = Number(li.getAttribute('data-id'));
-    updateTodo(id, e.target.value.trim());
+    const trimmed = e.target.value.trim();
+    const previousValue = getState().todos.find((todo) => todo.id === id)?.text ?? "";
+    updateTodo(id, trimmed.length > 0 ? trimmed : previousValue);
     clearEditing();
 }
 
+const appRoot = document.body
 export function setupEventListeners(appRoot) {
     // Add new todo on Enter key in the input box
     const input = appRoot.querySelector('.new-todo');
@@ -78,21 +83,21 @@ export function setupEventListeners(appRoot) {
     }
 
     // Handle toggle-all functionality
+
     const toggleAll = appRoot.querySelector('.toggle-all');
     // const toggleAll = appRoot.querySelector('#toggle-all');
     if (toggleAll) {
         toggleAll.removeEventListener('change', toggleAll._toggleAllHandler);
         toggleAll._toggleAllHandler = (e) => {
-            // console.log('toggle-all changed');
-            // const { todos } = getState();
-            // const areAllCompleted = todos.every(t => t.completed);
-            // todos.forEach(todo => {
-            //     if (todo.completed === areAllCompleted) {
-            //         toggleTodo(todo.id);
-            //     }
-            // });
-            console.log('toggle-all changed', e.target.checked);
-            toggleAllTodos(e.target.checked);
+            console.log("toggle-all changed");
+            const { todos } = getState();
+            const areAllCompleted = todos.every((t) => t.completed);
+            todos.forEach((todo) => {
+                if (todo.completed === areAllCompleted) {
+                toggleTodo(todo.id);
+                }
+            });
+        };
         };
         toggleAll.addEventListener('change', toggleAll._toggleAllHandler);
     }
@@ -137,7 +142,6 @@ export function setupEventListeners(appRoot) {
         console.log("clear-completed clicked");
         const { todos } = getState();
         todos.filter((t) => t.completed).forEach((t) => removeTodo(t.id));
-        };
-        clearBtn.addEventListener("click", clearBtn._clearHandler);
-    }
+    };
+    clearBtn.addEventListener("click", clearBtn._clearHandler);
 }

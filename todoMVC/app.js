@@ -258,7 +258,7 @@ function updateUI() {
     const patchObj = diff(oldVNode, newVNode);
     rootDomNode = patch(appRoot, rootDomNode, patchObj); // patch <body> on <html>
     oldVNode = newVNode;
-    setupEventListeners(appRoot); // re-attach event listeners
+    setupEventListeners(rootDomNode); // re-attach event listeners
 }
 
 // 3. Subscribe UI updates to state changes

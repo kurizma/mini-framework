@@ -85,7 +85,7 @@ Here’s an example of creating a simple button element:
 In this example:
 - The tag is `'button'`.
 - The attributes include a class and an event handler for the click event.
-- The children consist of a single text node, `'Click Me'`.
+- The children consist of a single text node, `'Clear Completed'`.
 
 
 ## Step 3: Render the Element

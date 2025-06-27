@@ -189,7 +189,7 @@ export function patch(parent, domNode, patchObj, index = 0) {
                 return domNode;
         }
     } catch (error) {
-        console.error("Error applying patch:", error, patchObj);
+        // console.error("Error applying patch:", error, patchObj);
         return domNode;
     }
 }

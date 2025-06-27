@@ -139,9 +139,10 @@ Here's an example:
 
 
 ```javascript
-input.addEventListener('keydown', input._todoKeyHandler);
-todoList.addEventListener("click", handleTodoListClick);
-todoList.addEventListener("change", handleTodoListChange);
+document.querySelector('.new-todo').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+    }
+});
 ```
 
 
@@ -197,13 +198,15 @@ A global state object holds the entire application state. Any action that modifi
 
 ```javascript
 let state = {
-  todos: [],
-  filter: "all"
+  todos: [], 
+  filter: "all", 
+  editingId: null,
 };
 
-function setState(newState) {
-  state = { ...state, ...newState };
-  renderApp();
+let listeners = [];
+
+export function getState() {
+    return state; 
 }
 ```
 
@@ -212,10 +215,15 @@ function setState(newState) {
 Simple routing is achieved by syncing the app state with the URL using the hashchange event. This lets users navigate to #/active, #/completed, etc., and updates the visible todos based on the URL.
 
 ```javascript
-window.addEventListener("hashchange", () => {
-  const route = location.hash.replace("#/", "");
-  setState({ filter: route });
-});
+ handleRoute() {
+        const path = window.location.hash.slice(1) || '/';
+        this.currentRoute = path;
+        
+        const handler = this.routes[path];
+        if (handler) {
+            handler();
+        }
+    }
 ```
 
 ## Getting Started: Clone and Run the TodoMVC Example

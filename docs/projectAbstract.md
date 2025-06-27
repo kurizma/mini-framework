@@ -231,7 +231,7 @@ Simple routing is achieved by syncing the app state with the URL using the hashc
 ```bash
 npm start
 # or
-python3 -m http.server 8000
+python3 -m http.server 8080
 ```
 
-Then open http://localhost:8000/todoMVC/
+Then open http://localhost:8080/todoMVC/
